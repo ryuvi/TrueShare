@@ -6,12 +6,8 @@ on:
       - 'v*'  # O workflow será executado quando você criar uma tag, como v1.0.0
 
 jobs:
-  build:
-    runs-on: ubuntu-latest  # Para Linux
-    strategy:
-      matrix:
-        os: [ubuntu-latest, windows-latest]  # Especificando as plataformas de destino
-
+  build-linux:
+    runs-on: ubuntu-latest  # Job específico para Linux
     steps:
       - name: Checkout repository
         uses: actions/checkout@v2
@@ -26,29 +22,40 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
-      - name: Build executable for ${{ matrix.os }}
+      - name: Build executable for Linux
         run: |
-          if [ "${{ matrix.os }}" == "ubuntu-latest" ]; then
-            # Para Linux, use pyinstaller para gerar o executável
-            pyinstaller --onefile --distpath=dist/linux --workpath=build/linux main.py
-          elif [ "${{ matrix.os }}" == "windows-latest" ]; then
-            # Para Windows, use pyinstaller para gerar o executável
-            pyinstaller --onefile --distpath=dist/windows --workpath=build/windows main.py
-          fi
+          pyinstaller --onefile --distpath=dist/linux --workpath=build/linux main.py
 
-  release:
-    needs: build  # Garantir que o job de release só rode após o job build
-    runs-on: ubuntu-latest  # Ou qualquer outra plataforma que você preferir
+      - name: Upload Linux release assets
+        uses: softprops/action-gh-release@v1
+        with:
+          files: dist/linux/*
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+  build-windows:
+    runs-on: windows-latest  # Job específico para Windows
     steps:
       - name: Checkout repository
         uses: actions/checkout@v2
 
-      - name: Upload release assets
+      - name: Set up Python environment
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.x'  # Defina a versão do Python que seu projeto utiliza
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Build executable for Windows
+        run: |
+          pyinstaller --onefile --distpath=dist/windows --workpath=build/windows main.py
+
+      - name: Upload Windows release assets
         uses: softprops/action-gh-release@v1
         with:
-          files: |
-            dist/linux/*
-            dist/windows/*
+          files: dist/windows/*
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -1,0 +1,46 @@
+name: Build and Release Executables
+
+on:
+  push:
+    tags:
+      - 'v*'  # O workflow será executado quando você criar uma tag, como v1.0.0
+
+jobs:
+  build:
+    runs-on: ubuntu-latest  # Para Linux
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest]  # Especificando as plataformas de destino
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Set up Python environment
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.x'  # Defina a versão do Python que seu projeto utiliza
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Build executable for ${{ matrix.os }}
+        run: |
+          if [ "${{ matrix.os }}" == "ubuntu-latest" ]; then
+            # Para Linux, use pyinstaller para gerar o executável
+            pyinstaller --onefile --distpath=dist/linux --workpath=build/linux main.py
+          elif [ "${{ matrix.os }}" == "windows-latest" ]; then
+            # Para Windows, use pyinstaller para gerar o executável
+            pyinstaller --onefile --distpath=dist/windows --workpath=build/windows main.py
+          fi
+
+      - name: Upload release assets
+        uses: softprops/action-gh-release@v1
+        with:
+          files: |
+            dist/linux/*
+            dist/windows/*
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

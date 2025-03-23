@@ -36,6 +36,14 @@ jobs:
             pyinstaller --onefile --distpath=dist/windows --workpath=build/windows main.py
           fi
 
+  release:
+    needs: build  # Garantir que o job de release só rode após o job build
+    runs-on: ubuntu-latest  # Ou qualquer outra plataforma que você preferir
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
       - name: Upload release assets
         uses: softprops/action-gh-release@v1
         with:

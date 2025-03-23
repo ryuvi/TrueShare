@@ -1,9 +1,7 @@
 chat.py
-code_structure.txt
 __pycache__
 dist
 build
 .pytest_cache
 *.spec
-*.txt
 venv

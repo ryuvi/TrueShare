@@ -1,0 +1,120 @@
+Aqui está o README para o seu projeto de transferência de arquivos usando PySide6 e ZeroMQ:
+
+---
+
+# File Transfer App
+
+Este projeto é um aplicativo de transferência de arquivos simples desenvolvido com **PySide6** (para a interface gráfica) e **ZeroMQ** (para comunicação entre dispositivos). O objetivo é permitir que os usuários descubram dispositivos na rede local e transfiram arquivos entre eles de maneira fácil e intuitiva.
+
+## Funcionalidades
+
+- **Descoberta de dispositivos**: O aplicativo encontra automaticamente dispositivos na rede local utilizando **ZeroMQ** para comunicação em tempo real.
+- **Seleção de dispositivo**: O usuário pode selecionar o dispositivo de destino a partir de uma lista de dispositivos encontrados.
+- **Envio de arquivos**: O usuário pode selecionar um arquivo para enviar para o dispositivo escolhido.
+- **Recepção de arquivos**: O servidor, que pode estar em outro dispositivo na rede, recebe os arquivos e os salva localmente.
+
+## Arquitetura
+
+O aplicativo consiste nos seguintes módulos:
+
+- **Main Application (`main.py`)**: Configura o aplicativo PySide6, gerencia a interface do usuário e lida com a lógica de descoberta e envio de arquivos.
+- **GUI (`gui/main_window.py`)**: Implementa a interface gráfica do usuário utilizando PySide6.
+- **Networking (`network/`)**:
+  - **File Transfer (`file_transfer.py`)**: Responsável pelo envio de arquivos usando ZeroMQ.
+  - **Device Announcer (`announcer.py`)**: Anuncia o dispositivo na rede para que outros dispositivos possam detectá-lo.
+  - **Device Discovery (`discovery.py`)**: Ouve a rede para descobrir dispositivos anunciados por outros.
+  - **Server (`server.py`)**: Implementa o servidor que recebe os arquivos enviados de outros dispositivos.
+
+## Dependências
+
+O aplicativo depende das seguintes bibliotecas:
+
+- **PySide6**: Para a criação da interface gráfica.
+- **ZeroMQ (zmq)**: Para comunicação entre dispositivos.
+- **Python 3.x**: O código é compatível com a versão mais recente do Python.
+
+### Como instalar as dependências
+
+1. Clone este repositório:
+
+   ```bash
+   git clone <URL_DO_REPOSITORIO>
+   cd <DIRETORIO_DO_REPOSITORIO>
+   ```
+
+2. Crie e ative um ambiente virtual (opcional, mas recomendado):
+
+   ```bash
+   python -m venv venv
+   source venv/bin/activate  # No Windows use `venv\Scripts\activate`
+   ```
+
+3. Instale as dependências:
+
+   ```bash
+   pip install -r requirements.txt
+   ```
+
+   Ou instale manualmente as bibliotecas necessárias:
+
+   ```bash
+   pip install PySide6 zmq
+   ```
+
+## Como Usar
+
+### Iniciar o Servidor (Em outro dispositivo na rede)
+
+Para iniciar o servidor que irá receber os arquivos, execute o seguinte script:
+
+```bash
+python network/server.py
+```
+
+O servidor ficará aguardando por arquivos na porta **5555**.
+
+### Iniciar o Cliente (Em um dispositivo que enviará o arquivo)
+
+1. Execute o aplicativo principal:
+
+   ```bash
+   python main.py
+   ```
+
+2. O aplicativo irá detectar dispositivos na rede automaticamente a cada 3 segundos.
+3. Selecione um dispositivo na lista de dispositivos encontrados.
+4. Selecione o arquivo que deseja enviar e clique em **Enviar Arquivo**.
+5. O status da transferência será exibido na interface gráfica.
+
+## Estrutura do Projeto
+
+```plaintext
+File Transfer App
+├── gui
+│   └── main_window.py           # Interface gráfica principal
+├── network
+│   ├── announcer.py             # Anunciador de dispositivos
+│   ├── discovery.py             # Descobridor de dispositivos
+│   ├── file_transfer.py         # Lógica de envio de arquivos
+│   └── server.py                # Servidor que recebe arquivos
+├── main.py                      # Arquivo principal para iniciar o app
+└── requirements.txt             # Dependências do projeto
+```
+
+## Contribuindo
+
+Se você deseja contribuir para este projeto, siga os seguintes passos:
+
+1. Faça um fork deste repositório.
+2. Crie uma branch para sua feature (`git checkout -b feature/feature-name`).
+3. Faça commit das suas mudanças (`git commit -am 'Add new feature'`).
+4. Envie para o repositório remoto (`git push origin feature/feature-name`).
+5. Crie um Pull Request.
+
+## Licença
+
+Este projeto está licenciado sob a MIT License - veja o arquivo [LICENSE](LICENSE) para mais detalhes.
+
+---
+
+Este README fornece uma visão geral completa do funcionamento do projeto, incluindo a estrutura, as dependências e como usá-lo.

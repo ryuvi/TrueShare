@@ -1,34 +1,46 @@
-# network/discovery.py
-import zmq
+import socket
 import threading
-import time
-import random
+import json
+from typing import Set, Dict, Optional
 
 class DeviceDiscovery:
-    def __init__(self, discovery_port=None):
-        self.discovery_port = discovery_port or random.randint(5000,6000)
-        self.context = zmq.Context()
-        self.subscriber = self.context.socket(zmq.SUB)
-        self.subscriber.bind(f"tcp://0.0.0.0:{self.discovery_port}")
-        self.subscriber.setsockopt_string(zmq.SUBSCRIBE, "")
-
-        self.devices = set()
-        self.running = True
-
-    def listen_for_devices(self):
-        while self.running:
-            try:
-                message = self.subscriber.recv_string(flags=zmq.NOBLOCK)
-                if message not in self.devices:
-                    self.devices.add(message)
-                    print(f"Novo dispositivo encontrado: {message}")
-            except zmq.Again:
-                time.sleep(1)  # Aguarda mensagens
-
-    def start_listening(self):
-        thread = threading.Thread(target=self.listen_for_devices, daemon=True)
-        thread.start()
-
-    def stop(self):
+    def __init__(self, multicast_group: str = "239.255.255.250", port: int = 1900):
+        self.multicast_group = multicast_group
+        self.port = port
+        self.devices: Set[str] = set()
         self.running = False
-        self.subscriber.close()
+        self.sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_UDP)
+        self.sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        self.sock.bind(('', self.port))
+        
+        # Adiciona o socket ao grupo multicast
+        mreq = socket.inet_aton(self.multicast_group) + socket.inet_aton('0.0.0.0')
+        self.sock.setsockopt(socket.IPPROTO_IP, socket.IP_ADD_MEMBERSHIP, mreq)
+
+    def start_listening(self) -> None:
+        """Inicia a escuta por dispositivos na rede"""
+        if self.running:
+            return
+            
+        self.running = True
+        def listen():
+            while self.running:
+                try:
+                    data, _ = self.sock.recvfrom(4096)
+                    device_info = json.loads(data.decode())
+                    
+                    if device_info.get("service") == "file_transfer":
+                        device_str = f"{device_info['hostname']} ({device_info['ip']})"
+                        if device_str not in self.devices:
+                            self.devices.add(device_str)
+                            print(f"Dispositivo encontrado: {device_str}")
+                except Exception as e:
+                    print(f"Erro na descoberta: {e}")
+
+        self.thread = threading.Thread(target=listen, daemon=True)
+        self.thread.start()
+
+    def stop(self) -> None:
+        """Para a escuta por dispositivos"""
+        self.running = False
+        self.sock.close()
